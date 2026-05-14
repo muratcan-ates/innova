@@ -155,8 +155,8 @@ description: "Task list for Innova MVP — idea submission & evaluation portal"
 
 ### Implementation for User Story 5
 
-- [ ] T045 [P] [US5] Create `components/ideas-data-table.tsx`: shadcn `data-table` with columns Submitter / Title / Category / Status (badge stub) / Submitted; sortable by Submitted column; a status filter `<Select>` above the table that drives client-side row filtering.
-- [ ] T046 [US5] Create `app/(app)/ideas/page.tsx`: server component that `requireRole("EVALUATOR")`, queries `prisma.idea.findMany({ include: { submitter: { select: { name: true } } }, orderBy: { createdAt: "desc" } })`, passes rows to `<IdeasDataTable />`.
+- [x] T045 [P] [US5] Create `components/ideas-data-table.tsx`: shadcn `data-table` with columns Submitter / Title / Category / Status (badge stub) / Submitted; sortable by Submitted column; a status filter `<Select>` above the table that drives client-side row filtering. **DONE 2026-05-15**: wrote `components/ideas-data-table.tsx` as a client component. Since base-nova doesn't ship `data-table`, composed an equivalent on top of shadcn `Table` + `Select` — no `@tanstack/react-table` dependency. Status filter has 5 options (ALL + 4 statuses); sort toggle is on the Submitted header (Asc/Desc with ArrowUp/ArrowDown icons). useMemo around filter+sort. Empty-filter case shows an inline "No ideas match this filter." row. Status badge is still the stub (T047 introduces the colored one).
+- [x] T046 [US5] Create `app/(app)/ideas/page.tsx`: server component that `requireRole("EVALUATOR")`, queries `prisma.idea.findMany({ include: { submitter: { select: { name: true } } }, orderBy: { createdAt: "desc" } })`, passes rows to `<IdeasDataTable />`. **DONE 2026-05-15**: wrote `app/(app)/ideas/page.tsx`. Used `select` with the nested `submitter: { select: { name: true } }` rather than `include` (tighter payload, no extra User fields). Maps to `IdeaRow[]` before passing to the table.
 
 **Checkpoint**: Evaluator sees all ideas; Submitter visiting `/ideas` is redirected away. Sort + filter work. Commit per task.
 
