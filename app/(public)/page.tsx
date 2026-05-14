@@ -29,6 +29,7 @@ import { Lightbulb, Workflow, BadgeCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { StaggerOnLoad } from "@/components/stagger-on-load";
 
 /* The three feature cards. Defined as data so a future tweak (copy,
  * order, icon) only touches this array — not the JSX. */
@@ -100,7 +101,10 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- Feature grid ---------------------------- */}
-      <section className="pb-24 grid gap-4 md:grid-cols-3">
+      {/* The ONE Framer Motion animation in the app (Constitution
+          Principle II) lives here — a gentle page-load stagger as
+          the three cards arrive. Nowhere else. */}
+      <StaggerOnLoad className="pb-24 grid gap-4 md:grid-cols-3">
         {FEATURES.map((f) => {
           const Icon = f.icon;
           return (
@@ -119,7 +123,7 @@ export default function LandingPage() {
             </Card>
           );
         })}
-      </section>
+      </StaggerOnLoad>
     </div>
   );
 }
