@@ -41,10 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-// NOTE: Plain shadcn <Badge> as a stub per the task plan. T047
-// introduces the colored <StatusBadge /> per FR-021, and T049
-// swaps this stub. Until then the badge shows status text only.
+import { StatusBadge } from "@/components/status-badge";
 
 /* The shape of the rows passed in by the parent page. We define
  * it inline rather than importing from `@prisma/client` so the
@@ -202,9 +199,7 @@ export function IdeasDataTable({ rows }: { rows: IdeaRow[] }) {
                     {CATEGORY_LABELS[r.category]}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="font-mono text-xs">
-                      {r.status}
-                    </Badge>
+                    <StatusBadge status={r.status} size="sm" />
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {formatDate(r.createdAt)}

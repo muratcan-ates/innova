@@ -31,11 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-// NOTE: Using the plain shadcn <Badge> as a stub here per the task
-// plan. T047 introduces a colored <StatusBadge /> component (per
-// FR-021) and T049 swaps this stub for it. Until then the badge
-// shows the status text without color-coding.
+import { StatusBadge } from "@/components/status-badge";
 
 /* The same category labels used by the submission form. Duplicated
  * here (instead of imported from the form component) to keep this
@@ -110,9 +106,7 @@ export function MyIdeasList({ ideas }: { ideas: Idea[] }) {
                 {CATEGORY_LABELS[idea.category]}
               </TableCell>
               <TableCell>
-                <Badge variant="secondary" className="font-mono text-xs">
-                  {idea.status}
-                </Badge>
+                <StatusBadge status={idea.status} size="sm" />
               </TableCell>
               <TableCell className="font-mono text-xs text-muted-foreground">
                 {formatDate(idea.createdAt)}
