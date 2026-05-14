@@ -140,8 +140,8 @@ description: "Task list for Innova MVP — idea submission & evaluation portal"
 
 ### Implementation for User Story 4
 
-- [ ] T043 [P] [US4] Create `components/my-ideas-list.tsx`: shadcn `Table` with columns Title / Category / Status (badge stub) / Submitted; renders rows from a server-fetched list; empty state shows icon + "No ideas yet" + CTA `<Button>` linking to `/ideas/new`.
-- [ ] T044 [US4] Create `app/(app)/ideas/mine/page.tsx`: server component that `requireRole("SUBMITTER")`, queries `prisma.idea.findMany({ where: { submitterId }, orderBy: { createdAt: "desc" } })`, passes to `<MyIdeasList />`.
+- [x] T043 [P] [US4] Create `components/my-ideas-list.tsx`: shadcn `Table` with columns Title / Category / Status (badge stub) / Submitted; renders rows from a server-fetched list; empty state shows icon + "No ideas yet" + CTA `<Button>` linking to `/ideas/new`. **DONE 2026-05-15**: wrote `components/my-ideas-list.tsx` as a server component. Renders the empty state (Lightbulb icon + "No ideas yet" + CTA) when `ideas.length === 0`; renders a shadcn `Table` otherwise (Title link → /ideas/[id], Category, Status as a Badge stub, Submitted as ISO YYYY-MM-DD). Status badge is the plain shadcn `Badge` for now — T049 swaps it for the colored `StatusBadge` (T047).
+- [x] T044 [US4] Create `app/(app)/ideas/mine/page.tsx`: server component that `requireRole("SUBMITTER")`, queries `prisma.idea.findMany({ where: { submitterId }, orderBy: { createdAt: "desc" } })`, passes to `<MyIdeasList />`. **DONE 2026-05-15**: wrote `app/(app)/ideas/mine/page.tsx`. Uses the (submitterId, createdAt) compound index from the Prisma schema (T014) for the sorted lookup.
 
 **Checkpoint**: Alice sees only her own ideas; Bob sees only his own; brand-new Submitter sees empty-state CTA. Commit per task.
 
