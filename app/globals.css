@@ -1,26 +1,150 @@
+/*
+ * app/globals.css
+ * ====================================================================
+ * What this file is: the single global stylesheet for Innova. It does
+ *   two jobs: (1) imports Tailwind v4 so utility classes work, and
+ *   (2) declares the brand color tokens, radius cap, and font wiring
+ *   that every shadcn/ui component reads via CSS variables.
+ *
+ * Why it exists: Constitution Principle VII (Aesthetic Discipline)
+ *   pins the visual system — dark mode default, surface #0A0A0A,
+ *   card #141414, single accent electric-indigo #6366F1, max 12px
+ *   radius, Geist Sans / Geist Mono / Bricolage Grotesque only.
+ *   This file is the canonical source of those tokens.
+ *
+ * Read by: every component in the app (via Tailwind utilities) and
+ *   every shadcn/ui primitive (via the CSS variables it expects).
+ * ====================================================================
+ */
+
 @import "tailwindcss";
 
+/* shadcn/ui's "new-york" theme reads class-based dark variants.
+ * Tailwind v4 needs an explicit custom-variant for that pattern. */
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------- */
+/* Brand tokens — values picked by the constitution.                */
+/* All other CSS variables below are derived from these so a future */
+/* tweak to the brand only touches the three lines below.           */
+/* ---------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surface — the page background. #0A0A0A per Principle VII. */
+  --innova-surface: #0a0a0a;
+
+  /* Card — slightly lighter than the surface so cards lift visibly
+   * but stay subtle (no neumorphism, no glow). #141414. */
+  --innova-card: #141414;
+
+  /* Accent — the single allowed accent color. Electric indigo. */
+  --innova-accent: #6366f1;
+
+  /* Foreground — near-white for AA contrast against the surface. */
+  --innova-foreground: #ededed;
+
+  /* Muted foreground — used for secondary text on cards. */
+  --innova-muted-foreground: #a1a1aa;
+
+  /* Border / input — visible-but-subtle on dark surfaces. */
+  --innova-border: #2a2a2a;
+
+  /* Destructive — for the Rejected status and form errors only. */
+  --innova-destructive: #ef4444;
+
+  /* Status colors per spec FR-021 (used by <StatusBadge />). */
+  --innova-status-submitted: #6b7280;   /* gray  */
+  --innova-status-under-review: #3b82f6;/* blue  */
+  --innova-status-accepted: #10b981;    /* green */
+  --innova-status-rejected: #ef4444;    /* red   */
+
+  /* Radius — Principle VII caps this at 12px. 0.75rem == 12px at
+   * the default 16px root font size. */
+  --radius: 0.75rem;
 }
 
+/* ---------------------------------------------------------------- */
+/* shadcn/ui-expected variables, mapped to our brand tokens above.  */
+/* shadcn primitives read these names directly, so as long as they  */
+/* are defined the new-york style will pick up our colors.          */
+/* ---------------------------------------------------------------- */
+:root {
+  --background: var(--innova-surface);
+  --foreground: var(--innova-foreground);
+
+  --card: var(--innova-card);
+  --card-foreground: var(--innova-foreground);
+
+  --popover: var(--innova-card);
+  --popover-foreground: var(--innova-foreground);
+
+  --primary: var(--innova-accent);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--innova-card);
+  --secondary-foreground: var(--innova-foreground);
+
+  --muted: var(--innova-card);
+  --muted-foreground: var(--innova-muted-foreground);
+
+  --accent: var(--innova-accent);
+  --accent-foreground: #ffffff;
+
+  --destructive: var(--innova-destructive);
+  --destructive-foreground: #ffffff;
+
+  --border: var(--innova-border);
+  --input: var(--innova-border);
+  --ring: var(--innova-accent);
+}
+
+/* ---------------------------------------------------------------- */
+/* Theme block — exposes the variables to Tailwind utilities so we  */
+/* can write classes like `bg-background` and `text-foreground`.    */
+/* The @theme inline directive is the Tailwind v4 way of doing it.  */
+/* ---------------------------------------------------------------- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Font variable names map to the CSS variables that next/font sets
+   * in app/layout.tsx (T008). Body uses Geist Sans, numeric/monospace
+   * uses Geist Mono, display headings use Bricolage Grotesque. */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bricolage);
+
+  /* Derived radii — shadcn primitives read --radius-lg / -md / -sm.
+   * Capped chain so even sub-components stay below the 12px ceiling. */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ---------------------------------------------------------------- */
+/* Body — default surface + foreground so unstyled pages still      */
+/* read correctly. Font-family deliberately omits Arial / Roboto /  */
+/* Inter / Space Grotesk per Principle VII (forbidden fonts).       */
+/* The real font wiring lives in app/layout.tsx (T008).             */
+/* ---------------------------------------------------------------- */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
