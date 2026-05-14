@@ -2,9 +2,11 @@
  * app/globals.css
  * ====================================================================
  * What this file is: the single global stylesheet for Innova. It does
- *   two jobs: (1) imports Tailwind v4 so utility classes work, and
- *   (2) declares the brand color tokens, radius cap, and font wiring
- *   that every shadcn/ui component reads via CSS variables.
+ *   three jobs: (1) imports Tailwind v4 and the shadcn/ui + animation
+ *   helpers, (2) declares the brand color tokens, radius cap, and
+ *   font wiring that every shadcn/ui component reads via CSS
+ *   variables, and (3) applies a `@layer base` reset so unstyled
+ *   pages still render correctly.
  *
  * Why it exists: Constitution Principle VII (Aesthetic Discipline)
  *   pins the visual system — dark mode default, surface #0A0A0A,
@@ -18,15 +20,22 @@
  */
 
 @import "tailwindcss";
+/* Provides the animation keyframes/utilities that shadcn primitives
+ * (Dialog, DropdownMenu, etc.) depend on. Added by `shadcn init`. */
+@import "tw-animate-css";
+/* shadcn's Tailwind v4 base layer. Added by `shadcn init`. */
+@import "shadcn/tailwind.css";
 
 /* shadcn/ui's "new-york" theme reads class-based dark variants.
- * Tailwind v4 needs an explicit custom-variant for that pattern. */
+ * Tailwind v4 needs an explicit custom-variant for that pattern.
+ * We declare it even though we always use dark mode — shadcn
+ * primitives check for `.dark *` in some descendant selectors. */
 @custom-variant dark (&:is(.dark *));
 
 /* ---------------------------------------------------------------- */
 /* Brand tokens — values picked by the constitution.                */
 /* All other CSS variables below are derived from these so a future */
-/* tweak to the brand only touches the three lines below.           */
+/* tweak to the brand only touches this single block.               */
 /* ---------------------------------------------------------------- */
 :root {
   /* Surface — the page background. #0A0A0A per Principle VII. */
@@ -58,16 +67,19 @@
   --innova-status-rejected: #ef4444;    /* red   */
 
   /* Radius — Principle VII caps this at 12px. 0.75rem == 12px at
-   * the default 16px root font size. */
+   * the default 16px root font size. (shadcn init wanted 0.625rem;
+   * we override back to the constitutional ceiling.) */
   --radius: 0.75rem;
 }
 
 /* ---------------------------------------------------------------- */
 /* shadcn/ui-expected variables, mapped to our brand tokens above.  */
-/* shadcn primitives read these names directly, so as long as they  */
-/* are defined the new-york style will pick up our colors.          */
+/* These are set in BOTH `:root` and `.dark` because the app is     */
+/* dark-mode-default — whether or not the `.dark` class is on       */
+/* <html>, primitives should see our brand colors.                  */
 /* ---------------------------------------------------------------- */
-:root {
+:root,
+.dark {
   --background: var(--innova-surface);
   --foreground: var(--innova-foreground);
 
@@ -95,6 +107,28 @@
   --border: var(--innova-border);
   --input: var(--innova-border);
   --ring: var(--innova-accent);
+
+  /* shadcn's Sidebar primitive reads its own variable namespace.
+   * We map the sidebar to use the card background and our accent so
+   * the sidebar feels integrated with the surface, not a separate
+   * theme. */
+  --sidebar: var(--innova-card);
+  --sidebar-foreground: var(--innova-foreground);
+  --sidebar-primary: var(--innova-accent);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--innova-card);
+  --sidebar-accent-foreground: var(--innova-foreground);
+  --sidebar-border: var(--innova-border);
+  --sidebar-ring: var(--innova-accent);
+
+  /* Charts aren't used by Innova MVP (no analytics dashboards). The
+   * variables are set anyway so any shadcn primitive that references
+   * them still renders without warnings. */
+  --chart-1: var(--innova-accent);
+  --chart-2: var(--innova-status-under-review);
+  --chart-3: var(--innova-status-accepted);
+  --chart-4: var(--innova-status-submitted);
+  --chart-5: var(--innova-status-rejected);
 }
 
 /* ---------------------------------------------------------------- */
@@ -123,12 +157,28 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
   /* Font variable names map to the CSS variables that next/font sets
    * in app/layout.tsx (T008). Body uses Geist Sans, numeric/monospace
    * uses Geist Mono, display headings use Bricolage Grotesque. */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-bricolage);
+  --font-heading: var(--font-bricolage);
 
   /* Derived radii — shadcn primitives read --radius-lg / -md / -sm.
    * Capped chain so even sub-components stay below the 12px ceiling. */
@@ -138,13 +188,20 @@
 }
 
 /* ---------------------------------------------------------------- */
-/* Body — default surface + foreground so unstyled pages still      */
-/* read correctly. Font-family deliberately omits Arial / Roboto /  */
-/* Inter / Space Grotesk per Principle VII (forbidden fonts).       */
+/* Base layer — applied to every element/page.                      */
+/* Font-family deliberately omits Arial / Roboto / Inter / Space    */
+/* Grotesque per Principle VII (forbidden fonts).                   */
 /* The real font wiring lives in app/layout.tsx (T008).             */
 /* ---------------------------------------------------------------- */
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  }
+  html {
+    @apply font-sans;
+  }
 }
