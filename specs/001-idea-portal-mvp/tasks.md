@@ -107,7 +107,7 @@ description: "Task list for Innova MVP — idea submission & evaluation portal"
 
 ### Implementation for User Story 2
 
-- [ ] T036 [P] [US2] Create `app/(public)/login/page.tsx`: shadcn `Form` with email + password; submit calls `signIn("credentials", { email, password, redirect: false })`; on failure renders the generic "Invalid email or password." toast (no field-level leak per FR-006); on success `router.push(searchParams.from ?? "/dashboard")`.
+- [x] T036 [P] [US2] Create `app/(public)/login/page.tsx`: shadcn `Form` with email + password; submit calls `signIn("credentials", { email, password, redirect: false })`; on failure renders the generic "Invalid email or password." toast (no field-level leak per FR-006); on success `router.push(searchParams.from ?? "/dashboard")`. **DONE 2026-05-15**: wrote `app/(public)/login/page.tsx` with the form wrapped in a `<Suspense>` boundary (Next.js 15 requires this around `useSearchParams`). Uses `signIn` from `next-auth/react`; treats any non-null `result.error` as the generic "Invalid email or password." toast (FR-006 — never leaks which field was wrong). On success: `toast.success`, `router.push(from ?? "/dashboard")`, `router.refresh()`. Verified in the operator's running dev server (renders correctly after a `.next` clear).
 - [ ] T037 [P] [US2] Wire Log Out in `components/app-sidebar.tsx`: button at bottom of sidebar calls `signOut({ redirectTo: "/" })`.
 - [ ] T038 [US2] Create/update `app/(public)/page.tsx`: landing page with Bricolage Grotesque display headline, two CTAs (Sign In / Register), three shadcn `Card`s describing the value props — per FR-025. No sidebar.
 
