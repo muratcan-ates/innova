@@ -34,6 +34,7 @@ import {
   EvaluationTimeline,
   type EvaluationEvent,
 } from "@/components/evaluation-timeline";
+import { EvaluationPanel } from "@/components/evaluation-panel";
 
 const CATEGORY_LABELS: Record<string, string> = {
   PRODUCT: "Product",
@@ -138,6 +139,22 @@ export default async function IdeaDetailPage({
         </CardContent>
       </Card>
 
+      {/* ---------------- Evaluation panel (Evaluators only) ---- */}
+      {/* Rendered ABOVE the timeline so the operator's eye lands on
+          the controls first during the demo — the timeline then
+          reads as the consequence of those controls. */}
+      {isEvaluator && (
+        <section className="space-y-3">
+          <h2 className="font-display text-lg font-semibold">
+            Move this idea
+          </h2>
+          <EvaluationPanel
+            ideaId={idea.id}
+            currentStatus={idea.status}
+          />
+        </section>
+      )}
+
       {/* ---------------- Evaluation timeline ---------------- */}
       <section className="space-y-3">
         <h2 className="font-display text-lg font-semibold">
@@ -147,9 +164,6 @@ export default async function IdeaDetailPage({
           events={idea.evaluations as EvaluationEvent[]}
         />
       </section>
-
-      {/* T052 (Phase 9) renders <EvaluationPanel /> here for
-          Evaluators only. Not on this page yet. */}
     </section>
   );
 }
