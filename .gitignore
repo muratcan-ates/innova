@@ -45,3 +45,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# innova — local state that must never be committed
+# SQLite database file + WAL journal (recreated by `npm run db:reset`)
+/prisma/dev.db
+/prisma/dev.db-journal
+# uploaded attachments live outside public/, so static serving cannot
+# leak them; they're per-environment and not part of source
+/uploads/
+
+# test artifacts (recreated on every run)
+/playwright-report/
+/test-results/
