@@ -93,7 +93,10 @@ describe("requireRole", () => {
   });
 
   it("redirects to /login when there is no session", async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    // Cast through `any` to side-step Auth.js's overloaded `auth()`
+    // signature (TS picks the middleware-wrapping overload here).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (vi.mocked(auth) as any).mockResolvedValueOnce(null);
 
     await expect(requireRole("EVALUATOR")).rejects.toThrow(
       "REDIRECT:/login",
@@ -107,7 +110,10 @@ describe("getSessionUser", () => {
   });
 
   it("returns null when there is no session (does not throw)", async () => {
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    // Cast through `any` to side-step Auth.js's overloaded `auth()`
+    // signature (TS picks the middleware-wrapping overload here).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (vi.mocked(auth) as any).mockResolvedValueOnce(null);
 
     const result = await getSessionUser();
     expect(result).toBeNull();
