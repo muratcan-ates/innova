@@ -26,6 +26,36 @@ There is no voting, no email, no draft mode, no multi-stage review board, and
 no internationalization. Everything runs locally for the demo, with three
 seeded user accounts and three seeded ideas already populated.
 
+## Clarifications
+
+### Session 2026-05-14
+
+- Q: Idea status transition rules → A: Strict linear with reopen — the
+  forward path is `Submitted → Under Review → Accepted | Rejected`; an
+  Evaluator MAY move `Accepted` or `Rejected` back to `Under Review`, and
+  MAY move `Under Review` back to `Submitted`. Direct jumps (e.g.
+  `Submitted → Accepted`) are NOT allowed.
+- Q: Attachment access control → A: Auth-gated, audience-mirroring — a
+  request for an attachment file requires an active session AND the
+  requester must be either (a) the owning Submitter of the parent idea
+  or (b) any Evaluator. Anyone else (logged-out visitor, or a different
+  Submitter) gets a 404. The attachment URL must behave exactly like the
+  parent idea's detail page with respect to visibility.
+- Q: Submitter edit/delete of own idea → A: Read-only after submission —
+  once an idea is created, the Submitter MAY view and download their
+  attachment, but MAY NOT edit any field, replace the attachment, or
+  delete the idea. Mistakes are corrected by submitting a new idea.
+- Q: Dashboard page content → A: Real page with stats cards — Submitter
+  sees count of own ideas and count of own ideas per status (Submitted /
+  Under Review / Accepted / Rejected). Evaluator sees total idea count,
+  count of all ideas per status, and a "Recent Activity" list of the most
+  recent evaluation events. The Dashboard is the default landing page
+  after login for both roles.
+- Q: Evaluation event immutability → A: Fully immutable — evaluation
+  events (status changes + comments) are append-only. No editing, no
+  deleting, no soft-delete. Evaluators correct mistakes by appending
+  another status change, not by altering history.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Registration (Priority: P1)
@@ -197,6 +227,12 @@ status and the evaluator's comment.
 3. **Given** a status change has been saved, **When** the corresponding
    Submitter reopens the idea, **Then** they see the new status badge and
    the evaluator's comment in the history.
+4. **Given** an idea in status **Submitted**, **When** the Evaluator tries
+   to set it directly to **Accepted** (skipping Under Review), **Then** the
+   UI prevents the action and the server rejects it with a clear error.
+5. **Given** an idea in status **Accepted**, **When** the Evaluator moves it
+   back to **Under Review** (reopen), **Then** the change is persisted and
+   the history records the reopen with the evaluator's name and timestamp.
 
 ---
 
@@ -232,8 +268,11 @@ three entries in order with the right colors, names, and timestamps.
 ### Edge Cases
 
 - **A Submitter tries to view someone else's idea by guessing the URL.**
-  The system returns a 404 or "Not authorized" page — never the idea
-  contents.
+  The system returns a 404 — never the idea contents.
+- **A logged-out visitor (or a different Submitter) requests an attachment
+  file URL directly.** The system returns a 404 and never streams the file.
+  The response MUST NOT distinguish "exists but forbidden" from "does not
+  exist" (no 403 that leaks existence).
 - **An Evaluator opens an idea while it is being edited by another
   Evaluator (race condition).** Last write wins; both writes are recorded
   in the history with their respective timestamps so nothing is lost.
@@ -246,8 +285,11 @@ three entries in order with the right colors, names, and timestamps.
 - **The Submitter's "My Ideas" list is empty.** Empty state with icon,
   headline, and CTA — never a blank page.
 - **An Evaluator changes a status to its current value** (e.g. Submitted →
-  Submitted). The system allows it but the history entry is still recorded
-  (with comment if provided), to keep the audit trail honest.
+  Submitted). The UI prevents this no-op (the dropdown does not offer the
+  current status as a destination), so no history entry is created.
+- **An Evaluator tries to skip a stage** (e.g. Submitted → Accepted). The UI
+  hides the disallowed destination, and if the server receives it anyway
+  (URL tampering), it returns a clear error and writes nothing.
 
 ## Requirements *(mandatory)*
 
@@ -295,6 +337,12 @@ three entries in order with the right colors, names, and timestamps.
   filterable by status.
 - **FR-014**: Submitters MUST NOT be able to view another Submitter's idea
   by any means — including typing a guessed URL into the address bar.
+- **FR-014a**: Attachment file URLs MUST enforce the same visibility rule
+  as the parent idea: an HTTP request for an attachment file MUST be served
+  ONLY when (a) the requester has an active session AND (b) the requester
+  is either the owning Submitter of the parent idea OR an Evaluator. All
+  other requests (logged-out, or a different Submitter) MUST receive a 404
+  — never the file bytes and never a 403 that confirms existence.
 - **FR-015**: The idea detail page MUST display title, full description,
   category, current status badge (colored per FR-021), submitter name,
   submission date, attachment download link (if attached), and the full
@@ -302,14 +350,34 @@ three entries in order with the right colors, names, and timestamps.
 
 **Evaluation**
 
-- **FR-016**: Evaluators MUST be able to change an idea's status to one of
-  {Submitted, Under Review, Accepted, Rejected} from the detail page.
+- **FR-016**: Evaluators MUST be able to change an idea's status from the
+  detail page, but only along the allowed transition graph:
+  - `Submitted → Under Review` (forward)
+  - `Under Review → Accepted` (forward, comment required — see FR-017)
+  - `Under Review → Rejected` (forward, comment required — see FR-017)
+  - `Under Review → Submitted` (reopen)
+  - `Accepted → Under Review` (reopen)
+  - `Rejected → Under Review` (reopen)
+
+  Any other transition (e.g. `Submitted → Accepted`, `Accepted → Rejected`)
+  MUST be blocked by the UI and rejected by the server, with a clear error
+  message.
 - **FR-017**: Evaluators MUST be required to provide a non-empty comment
   when moving an idea to **Accepted** or **Rejected**.
 - **FR-018**: Every status change MUST be recorded in an audit history with
   prior status, new status, evaluator name, timestamp, and comment.
+- **FR-018a**: The audit history is append-only and immutable. Past
+  evaluation events MUST NOT be editable or deletable through any UI or
+  API surface, and the server MUST reject any such request. To correct a
+  mistake, an Evaluator records a NEW event (e.g. via a reopen
+  transition); the original event remains visible in the history forever.
 - **FR-019**: Submitters MUST NOT see evaluation controls (status dropdown,
   comment box) on any idea — even their own. They see history only.
+- **FR-019a**: After an idea is submitted, the Submitter MUST NOT be able to
+  edit any of its fields (title, description, category), replace the
+  attachment, or delete the idea. The detail page MUST NOT render any
+  edit/delete controls for Submitters. Any direct write request to a
+  Submitter-write endpoint MUST be rejected by the server.
 - **FR-020**: Only Evaluators may change status or add evaluation comments.
 
 **Status & UI Conventions**
@@ -329,6 +397,20 @@ three entries in order with the right colors, names, and timestamps.
 - **FR-026**: The authenticated layout MUST include a left sidebar with:
   Dashboard, Submit Idea, My Ideas (Submitters) or All Ideas (Evaluators),
   Log Out.
+- **FR-026a**: "Dashboard" MUST be a real page (not a redirect) and MUST
+  be the default landing page after successful login for both roles.
+  Dashboard content:
+  - **For Submitters**: four stat cards showing the count of the
+    Submitter's own ideas in each status (Submitted, Under Review,
+    Accepted, Rejected), plus a single total-count card. When the
+    Submitter has zero ideas, the page MUST show all counts as 0 with
+    an empty-state CTA ("Submit your first idea").
+  - **For Evaluators**: a total-count card, four stat cards (one per
+    status, counted across ALL ideas), and a "Recent Activity" list
+    showing the 5 most recent evaluation events (each entry: idea
+    title → new status, evaluator name, timestamp). When no evaluation
+    events exist yet, the activity list MUST show an empty-state
+    placeholder ("No evaluations yet").
 
 **Seed Data**
 
@@ -405,6 +487,12 @@ These are explicitly **not** part of the MVP and will not be built tonight:
 
 - Voting, scoring, ranking, blind review, or multi-stage review boards.
 - Drafts, autosave, or "save without submitting".
+- Editing or deleting an idea after it has been submitted (Submitters
+  cannot modify or remove their own ideas; mistakes are corrected by
+  submitting a new idea).
+- Editing or deleting past evaluation events (Evaluators cannot modify
+  or remove a prior status change or comment; corrections are made by
+  appending a new evaluation event).
 - Multimedia attachments beyond a single PDF/DOC/DOCX (no images, video,
   multi-file uploads).
 - Email notifications, in-app notifications, or any push channel.
