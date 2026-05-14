@@ -44,6 +44,9 @@ function makeFile(
   bytes: number[],
   totalSize?: number,
 ): File {
+  // Wrap the Uint8Array in a Blob first to side-step a TS narrowing
+  // quirk where `new File([uint8array], …)` complains about
+  // ArrayBufferLike vs ArrayBuffer. The runtime behavior is the same.
   const head = new Uint8Array(bytes);
   let buffer: Uint8Array;
   if (totalSize !== undefined && totalSize > bytes.length) {
@@ -52,7 +55,11 @@ function makeFile(
   } else {
     buffer = head;
   }
-  return new File([buffer], name);
+  // Cast to BlobPart to side-step a TS narrowing quirk in the DOM
+  // lib (Uint8Array<ArrayBufferLike> vs Uint8Array<ArrayBuffer>).
+  // The actual buffer here is always a fresh, owned ArrayBuffer.
+  const blob = new Blob([buffer as BlobPart]);
+  return new File([blob], name);
 }
 
 describe("validateAttachment", () => {
