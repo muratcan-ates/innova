@@ -35,7 +35,7 @@ description: "Task list for Innova MVP — idea submission & evaluation portal"
 
 **Purpose**: Get the Next.js project scaffolded, dependencies installed, and configs in place. No feature code in this phase.
 
-- [ ] T001 Initialize Next.js 15 App Router + TypeScript project at repo root using `npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias "@/*"` (interactively or via flags); commit baseline.
+- [x] T001 Initialize Next.js 15 App Router + TypeScript project at repo root using `npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias "@/*"` (interactively or via flags); commit baseline. **DONE 2026-05-14**: pinned to `create-next-app@15` after `@latest` shipped Next.js 16 (constitution violation). Scaffolded to `/tmp/innova-scaffold`, copied non-conflicting files in, merged `.gitignore`. Verified with `npm run build` — 5 static pages, no errors. Next 15.5.18, React 19.1.0, Tailwind v4.
 - [ ] T002 [P] Install runtime dependencies: `npm install next-auth@beta @auth/prisma-adapter prisma @prisma/client bcryptjs sonner lucide-react react-hook-form zod @hookform/resolvers framer-motion`.
 - [ ] T003 [P] Install devDependencies: `npm install -D @types/bcryptjs vitest @vitejs/plugin-react @playwright/test tsx`.
 - [ ] T004 [P] Tighten `tsconfig.json` to `"strict": true`, `"noUncheckedIndexedAccess": true`; verify `npm run build` still succeeds.
