@@ -1,0 +1,125 @@
+// prisma/schema.prisma
+// =====================================================================
+// What this file is: the Prisma data model for the Innova MVP.
+// Why it exists: a single source of truth for the database shape that
+//   Prisma uses to generate both the TypeScript client and the SQL
+//   migrations. Edit here, then run `npm run db:reset` to regenerate.
+// Read by: prisma CLI (migrate, generate, db push) and the Prisma
+//   client at runtime via lib/prisma.ts.
+//
+// IMPORTANT — Stack Lock-In (Constitution Principle II):
+//   - Provider is SQLite. The DB lives at ./prisma/dev.db (gitignored).
+//   - Enums are declared here but SQLite stores them as TEXT under
+//     the hood (Prisma maps the enum at the client layer). At MVP
+//     scale this is fine and keeps the schema readable.
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite is one file on disk. The DATABASE_URL points at it.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------
+
+// Role determines what a user can see and do.
+//   SUBMITTER  → can submit ideas and view only their own.
+//   EVALUATOR  → can view ALL ideas and change status + leave comments.
+// Maps to spec FR-001 / FR-011 / FR-012 / FR-016 / FR-019.
+enum Role {
+  SUBMITTER
+  EVALUATOR
+}
+
+// Status is the position in the idea lifecycle. Transitions are
+// constrained by lib/transitions.ts AND enforced server-side in
+// server/actions/evaluate-idea.ts (per spec FR-016 and the
+// clarified transition graph from /speckit-clarify Q1).
+enum Status {
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
+// Category is the fixed list from FR-007. New values require a
+// spec change (the dropdown on the submission form reads this enum).
+enum Category {
+  PRODUCT
+  PROCESS
+  TECHNOLOGY
+  CUSTOMER_EXPERIENCE
+  OTHER
+}
+
+// ---------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------
+
+// User is anyone who has registered. Email is the login identifier
+// and must be unique. Password is stored only as a bcryptjs hash;
+// the plain password never touches disk (spec FR-002, FR-006).
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime     @default(now())
+
+  ideas        Idea[]       @relation("UserIdeas")
+  evaluations  Evaluation[] @relation("UserEvaluations")
+}
+
+// Idea is one proposal. `filePath` is the location on disk under
+// ./uploads/ relative to the project root; null means no attachment.
+// `submitterId` points at the User who created it; this is checked
+// on every read to enforce spec FR-014 (Submitters see only their own).
+model Idea {
+  id           String       @id @default(cuid())
+  title        String
+  description  String
+  category     Category
+  status       Status       @default(SUBMITTED)
+  filePath     String?
+  // Original filename is preserved so the auth-gated download route
+  // (FR-014a) can serve a recognizable Content-Disposition filename.
+  fileName     String?
+  submitterId  String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  submitter    User         @relation("UserIdeas", fields: [submitterId], references: [id])
+  evaluations  Evaluation[] @relation("IdeaEvaluations")
+
+  // Index for "list my ideas, newest first" (FR-011) and "list all
+  // ideas, newest first" (FR-012). Both queries sort by createdAt DESC.
+  @@index([submitterId, createdAt])
+  @@index([createdAt])
+}
+
+// Evaluation is one entry in an idea's audit history. Append-only:
+// no UPDATE Server Action, no DELETE Server Action, no UI surface
+// for editing past rows. This enforces spec FR-018a (Q5 from clarify).
+model Evaluation {
+  id          String   @id @default(cuid())
+  ideaId      String
+  evaluatorId String
+  priorStatus Status
+  newStatus   Status
+  comment     String   // empty string allowed when comment not required
+  createdAt   DateTime @default(now())
+
+  idea        Idea     @relation("IdeaEvaluations", fields: [ideaId], references: [id])
+  evaluator   User     @relation("UserEvaluations", fields: [evaluatorId], references: [id])
+
+  // Index for "show history for this idea in chronological order"
+  // (FR-018, FR-021, US-7). Pagination is unnecessary at MVP scale.
+  @@index([ideaId, createdAt])
+}
