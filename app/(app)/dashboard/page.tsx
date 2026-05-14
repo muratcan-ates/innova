@@ -45,13 +45,6 @@ const STATUS_ORDER: Status[] = [
   "REJECTED",
 ];
 
-const STATUS_LABEL: Record<Status, string> = {
-  SUBMITTED: "Submitted",
-  UNDER_REVIEW: "Under Review",
-  ACCEPTED: "Accepted",
-  REJECTED: "Rejected",
-};
-
 /* Shape returned by `prisma.idea.groupBy`. We post-process it into
  * a {Status → count} map. */
 type StatusGroup = { status: Status; _count: { _all: number } };
