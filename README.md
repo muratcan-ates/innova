@@ -481,6 +481,6 @@ MIT — see `LICENSE` for the full text. The seeded credentials are not covered 
 
 <div align="center">
 
-**Built with GitHub Spec Kit + Claude Code · One overnight session · May 2026**
+**Built with GitHub Spec Kit + Claude Code · May 2026**
 
 </div>
