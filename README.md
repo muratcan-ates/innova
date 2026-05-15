@@ -320,9 +320,9 @@ The "Under Review" and "Accepted" ideas each have admin-written evaluation entri
 
 ---
 
-## 🎬 Demo Storyline
+## 🎬 Demo 
 
-The full 5-minute jury walkthrough:
+The full walkthrough:
 
 1. **Landing page** (`http://localhost:3000`) — dark hero, three feature cards stagger in, **Sign In** and **Register** CTAs.
 2. **Register a Submitter live** — name + email + password + role (default Submitter). After submit, land on the Dashboard with all-zero stat tiles and a "Submit your first idea" CTA.
