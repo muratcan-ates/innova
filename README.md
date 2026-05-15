@@ -105,6 +105,23 @@ This README is the operator-facing setup guide. The deeper artifacts (spec, plan
 
 ---
 
+## 📸 Screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/01-landing.jpeg" alt="Landing page — dark hero, three feature cards"/><br/><sub><b>Landing</b> — dark hero with three staggered feature cards</sub></td>
+<td width="50%"><img src="docs/screenshots/02-dashboard.jpeg" alt="Evaluator dashboard — five stat tiles and recent activity"/><br/><sub><b>Evaluator dashboard</b> — per-status counts plus the recent transition feed</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/03-all-ideas.jpeg" alt="All ideas table"/><br/><sub><b>All ideas</b> — every idea in the portal, with status badges and submission dates</sub></td>
+<td width="50%"><img src="docs/screenshots/04-evaluation.jpeg" alt="Idea detail with evaluation history"/><br/><sub><b>Evaluation panel</b> — the append-only audit trail, two transitions visible</sub></td>
+</tr>
+</table>
+
+<br/>
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Choice | Why |
